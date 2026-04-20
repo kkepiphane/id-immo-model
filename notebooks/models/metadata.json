@@ -1,0 +1,40 @@
+{
+  "model_name": "XGBoost",
+  "r2": 0.30539798736572266,
+  "rmse": 343697.7217032432,
+  "mae": 140858.28125,
+  "features": [
+    "property_type",
+    "offer_type",
+    "bedrooms",
+    "square_footage",
+    "neighborhood"
+  ],
+  "top_neighborhoods": [
+    "Agoe",
+    "Adidogome",
+    "Avedji",
+    "Tokoin",
+    "H\u00e9dzranawoe",
+    "Kegue",
+    "Djidjol\u00e9",
+    "B\u00e8",
+    "Avenou",
+    "Agbal\u00e9p\u00e9do",
+    "Baguida",
+    "Leo 2000",
+    "Zanguera",
+    "Avepozo",
+    "Atti\u00e9gou",
+    "Adewui",
+    "Totsi",
+    "Sagbado",
+    "Adidoadin ",
+    "Segbe"
+  ],
+  "price_stats": {
+    "mean": 272206.86549165123,
+    "median": 200000.0,
+    "std": 310991.83759376046
+  }
+}
