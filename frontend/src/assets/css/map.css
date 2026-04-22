@@ -1,0 +1,49 @@
+.map-container {
+  padding: 30px;
+  background: #f4f6fb;
+  min-height: 100vh;
+}
+
+/* GRID SIMULANT MAP */
+.map-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+}
+
+.cell {
+  height: 120px;
+  border-radius: 12px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.cell:hover {
+  transform: scale(1.05);
+}
+
+/* HEAT COLORS */
+.low { background: #22c55e; }
+.medium { background: #f59e0b; }
+.high { background: #ef4444; }
+
+/* LEGEND */
+.legend {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+}
+
+.box {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  border-radius: 4px;
+}

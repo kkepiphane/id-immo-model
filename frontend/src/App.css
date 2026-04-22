@@ -1,0 +1,345 @@
+/* ================================================================
+   App.css — ID Immobilier
+   Palette : Blanc cassé #f0ece4 · Bleu nuit #09152a · Vert émeraude #00c896
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+
+/* ---- VARIABLES GLOBALES ---- */
+:root {
+  /* Palette principale */
+  --color-bg:           #25334d;   /* bleu nuit profond */
+  --color-surface:      #0e1f3a;   /* bleu nuit moyen */
+  --color-card:         rgba(255, 255, 255, 0.045);
+  --color-card-hover:   rgba(255, 255, 255, 0.07);
+
+  --color-accent:       #00c896;   /* vert émeraude */
+  --color-accent-dim:   rgba(0, 200, 150, 0.12);
+  --color-accent-glow:  rgba(0, 200, 150, 0.25);
+
+  --color-gold:         #f8b444;   /* vente */
+  --color-danger:       #f87070;   /* baisse */
+
+  --color-text:         #f0ece4;   /* blanc cassé */
+  --color-text-sec:     rgba(240, 236, 228, 0.70);
+  --color-text-muted:   rgba(240, 236, 228, 0.40);
+  --color-text-hint:    rgba(240, 236, 228, 0.22);
+
+  --color-border:       rgba(255, 255, 255, 0.07);
+  --color-border-em:    rgba(0, 200, 150, 0.25);
+
+  /* Sidebar — reprend les tokens de sidebar.css mais adapte les couleurs */
+  --sb-width:             260px;
+  --sb-collapsed-width:   70px;
+  --sb-bg:                #0e1f3a;
+  --sb-border:            rgba(255, 255, 255, 0.07);
+  --sb-primary:           #00c896;
+  --sb-primary-light:     rgba(0, 200, 150, 0.12);
+  --sb-primary-hover:     rgba(0, 200, 150, 0.18);
+  --sb-text-primary:      #f0ece4;
+  --sb-text-secondary:    rgba(240, 236, 228, 0.50);
+  --sb-text-section:      rgba(240, 236, 228, 0.28);
+  --sb-item-hover:        rgba(255, 255, 255, 0.05);
+  --sb-active-bg:         rgba(0, 200, 150, 0.12);
+  --sb-active-color:      #00c896;
+  --sb-user-bg:           rgba(0, 200, 150, 0.06);
+  --sb-transition:        0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --sb-shadow:            0 4px 32px rgba(0, 0, 0, 0.35);
+  --sb-radius:            12px;
+  --sb-item-radius:       10px;
+  --sb-font:              'Sora', system-ui, sans-serif;
+
+  /* Rayons */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  22px;
+
+  /* Ombres */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.50);
+
+  /* Transition */
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- RESET ---- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+}
+
+body {
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a        { color: inherit; text-decoration: none; }
+button   { font-family: inherit; }
+ul, ol   { list-style: none; }
+img      { max-width: 100%; height: auto; display: block; }
+
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar            { width: 5px; height: 5px; }
+::-webkit-scrollbar-track      { background: transparent; }
+::-webkit-scrollbar-thumb      { background: rgba(255,255,255,0.10); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,0.18); }
+
+/* ---- SÉLECTION ---- */
+::selection {
+  background: rgba(0, 200, 150, 0.18);
+  color: var(--color-text);
+}
+
+/* ================================================================
+   LAYOUT PRINCIPAL
+   ================================================================ */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+/* ---- MAIN ---- */
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-width: 0;
+
+  /* Desktop : sidebar 260px visible par défaut */
+  margin-left: var(--sb-width);
+  transition: margin-left var(--sb-transition);
+
+  background: var(--color-bg);
+}
+
+/* Desktop : sidebar collapse (hamburger) */
+.app-main--collapsed {
+  margin-left: var(--sb-collapsed-width);
+}
+
+/* ---- TOPBAR ---- */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 60px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
+  /* Légère lueur verte en bas */
+  box-shadow: 0 1px 0 rgba(199, 224, 218, 0.08), 0 2px 12px rgba(0, 0, 0, 0.20);
+}
+
+/* Bouton hamburger */
+.app-menu-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition), box-shadow var(--transition);
+  flex-shrink: 0;
+  color: var(--color-text-sec);
+}
+
+.app-menu-btn:hover {
+  background: rgba(0, 200, 150, 0.10);
+  color: var(--color-accent);
+  box-shadow: 0 0 0 1px rgba(0, 200, 150, 0.20);
+}
+
+.app-menu-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  transition: stroke var(--transition);
+}
+
+/* Côté droit topbar */
+.app-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Badge "live" */
+.app-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: rgba(0, 200, 150, 0.08);
+  border: 1px solid rgba(0, 200, 150, 0.22);
+  padding: 4px 11px;
+  border-radius: 99px;
+  letter-spacing: 0.02em;
+}
+
+.app-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: pulse-live 2s infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.45; transform: scale(0.75); }
+}
+
+/* Greeting */
+.app-topbar-greeting {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+/* ---- CONTENU PAGE ---- */
+.app-content {
+  flex: 1;
+  overflow-x: hidden;
+  /* Pas de padding ici — chaque page gère le sien */
+}
+
+/* ================================================================
+   COMPOSANTS PARTAGÉS
+   (utilisés dans dashboard, prix, zone, biens, evolution…)
+   ================================================================ */
+
+/* Utilitaires couleur */
+.up   { color: var(--color-accent)  !important; }
+.down { color: var(--color-danger)  !important; }
+
+/* Card générique */
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: rgba(255,255,255,0.10);
+}
+
+/* Loader bar */
+.loader-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* Pills partagées */
+.pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pill.location { background: rgba(0, 200, 150, 0.12); color: var(--color-accent); }
+.pill.vente    { background: rgba(248, 180, 68, 0.12); color: var(--color-gold); }
+.pill.source   { background: rgba(255,255,255,0.06);   color: var(--color-text-muted); font-size: 0.62rem; }
+.pill.type     { background: rgba(100,150,220,0.12);   color: #7aaee8; }
+
+/* Status badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 4px 11px;
+  border-radius: 99px;
+  border: 1px solid;
+}
+.status-badge.live {
+  background: rgba(0, 200, 150, 0.07);
+  border-color: rgba(0, 200, 150, 0.22);
+  color: var(--color-accent);
+}
+.status-badge.loading {
+  background: rgba(255,255,255,0.03);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-live 2s infinite;
+}
+
+/* Loading dot inline */
+.loading-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: pulse-live 1s infinite;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Fade-up animation partagée */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   RESPONSIVE — même logique que l'original
+   ================================================================ */
+
+/* Tablet ≤1024px : sidebar icon-only 70px */
+@media (max-width: 1024px) {
+  .app-main {
+    margin-left: var(--sb-collapsed-width); /* 70px */
+  }
+  .app-main--collapsed {
+    margin-left: var(--sb-collapsed-width);
+  }
+}
+
+/* Mobile ≤768px : drawer off-canvas → contenu pleine largeur */
+@media (max-width: 768px) {
+  .app-main {
+    margin-left: 0 !important;
+  }
+  .app-topbar {
+    padding: 0 16px;
+    height: 56px;
+  }
+}
