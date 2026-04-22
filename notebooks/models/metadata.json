@@ -1,8 +1,8 @@
 {
-  "model_name": "XGBoost",
-  "r2": 0.30539798736572266,
-  "rmse": 343697.7217032432,
-  "mae": 140858.28125,
+  "model_name": "Linear Regression",
+  "r2": 0.15996188681823897,
+  "rmse": 270591.17754207057,
+  "mae": 178189.27063312978,
   "features": [
     "property_type",
     "offer_type",
@@ -18,14 +18,14 @@
     "H\u00e9dzranawoe",
     "Kegue",
     "Djidjol\u00e9",
-    "B\u00e8",
     "Avenou",
     "Agbal\u00e9p\u00e9do",
+    "B\u00e8",
     "Baguida",
     "Leo 2000",
     "Zanguera",
-    "Avepozo",
     "Atti\u00e9gou",
+    "Avepozo",
     "Adewui",
     "Totsi",
     "Sagbado",
@@ -33,8 +33,8 @@
     "Segbe"
   ],
   "price_stats": {
-    "mean": 272206.86549165123,
+    "mean": 271504.7810707457,
     "median": 200000.0,
-    "std": 310991.83759376046
+    "std": 311299.4923016483
   }
 }
