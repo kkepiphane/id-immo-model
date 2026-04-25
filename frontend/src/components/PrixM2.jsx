@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useApi } from '../hooks/useApi'
 import '../assets/css/prix.css'
 
@@ -53,16 +53,19 @@ export default function PrixM2() {
   const [sortCol, setSortCol] = useState('prix')
   const [sortDir, setSortDir] = useState('desc')
 
-  /* Construction de l'endpoint avec filtres */
-  const params = new URLSearchParams()
-  if (propType !== 'Tous les types') params.set('property_type', propType)
-  if (offerType !== 'Toutes les offres') params.set('offer_type', offerType)
-  if (zone !== 'Toutes les zones') params.set('neighborhood', zone)
-  const endpoint = `/analytics/prix-m2?${params.toString()}`
+  /* Construction de l'endpoint avec filtres - utilisant useMemo pour optimiser */
+  const endpoint = useMemo(() => {
+    const params = new URLSearchParams()
+    if (propType !== 'Tous les types') params.set('property_type', propType)
+    if (offerType !== 'Toutes les offres') params.set('offer_type', offerType)
+    if (zone !== 'Toutes les zones') params.set('neighborhood', zone)
+    const queryString = params.toString()
+    return `/analytics/prix-m2${queryString ? `?${queryString}` : ''}`
+  }, [propType, offerType, zone])
 
-  const { data, loading } = useApi(endpoint)
+  const { data, loading, error } = useApi(endpoint)
 
-  /* Données de fallback */
+  /* Données de fallback - seulement utilisées si pas de données API */
   const fallbackRows = [
     { zone: 'Lomé Centre', prix: 500000, min: 300000, max: 800000, count: 142, trend: 8 },
     { zone: 'Hédzranawoé', prix: 480000, min: 280000, max: 750000, count: 98, trend: 5.2 },
@@ -75,14 +78,16 @@ export default function PrixM2() {
     { zone: 'Zanguera', prix: 195000, min: 70000, max: 360000, count: 63, trend: 0.4 },
     { zone: 'Baguida', prix: 175000, min: 60000, max: 320000, count: 41, trend: -1.5 },
   ]
-  const rows = data?.rows ?? fallbackRows
-  const kpis = data?.kpis ?? {
+
+  // Utiliser les données API ou fallback
+  const rows = data?.rows?.length ? data.rows : fallbackRows
+  const kpis = data?.kpis || {
     avg: 410000,
     variation: 4.5,
     zones: 18,
     total: rows.reduce((s, r) => s + (r.count ?? 0), 0)
   }
-  const histData = data?.distribution ?? [
+  const histData = data?.distribution || [
     { range: '0–100k', count: 45 },
     { range: '100–300k', count: 180 },
     { range: '300–500k', count: 260 },
@@ -96,17 +101,24 @@ export default function PrixM2() {
     const v = sortDir === 'asc' ? 1 : -1
     return a[sortCol] > b[sortCol] ? v : -v
   })
-  const maxPrix = Math.max(...rows.map(r => r.prix))
+  
+  const maxPrix = rows.length > 0 ? Math.max(...rows.map(r => r.prix)) : 0
 
   const toggleSort = col => {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(col); setSortDir('desc') }
   }
+  
   const SortIcon = ({ col }) => (
     <span className="sort-icon">
       {sortCol === col ? (sortDir === 'desc' ? '↓' : '↑') : '↕'}
     </span>
   )
+
+  // Afficher une erreur si l'API échoue
+  if (error) {
+    console.error('API Error:', error)
+  }
 
   return (
     <div className="prix-container">
@@ -125,7 +137,7 @@ export default function PrixM2() {
           <select value={offerType} onChange={e => setOfferType(e.target.value)}>
             {OFFER_TYPES.map(t => <option key={t}>{t}</option>)}
           </select>
-          {loading && <span className="loading-dot" />}
+          {loading && <span className="loading-dot">Chargement...</span>}
         </div>
       </div>
 
