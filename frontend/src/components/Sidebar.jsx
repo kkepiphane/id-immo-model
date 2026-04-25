@@ -3,62 +3,63 @@ import { Link, useLocation } from 'react-router-dom'
 import { useApi } from '../hooks/useApi'
 import "../assets/css/sidebar.css"
 
-import DashboardIcon      from "@mui/icons-material/Dashboard"
-import HomeWorkIcon       from "@mui/icons-material/HomeWork"
-import AnalyticsIcon      from "@mui/icons-material/Analytics"
-import MapIcon            from "@mui/icons-material/Map"
-import ManageSearchIcon   from "@mui/icons-material/ManageSearch"
-import ShowChartIcon      from "@mui/icons-material/ShowChart"
-import TimelineIcon       from "@mui/icons-material/Timeline"
-import LocationOnIcon     from "@mui/icons-material/LocationOn"
-import SmartToyIcon       from "@mui/icons-material/SmartToy"
-import SettingsIcon       from "@mui/icons-material/Settings"
-import ExpandMoreIcon     from "@mui/icons-material/ExpandMore"
+import DashboardIcon from "@mui/icons-material/Dashboard"
+import HomeWorkIcon from "@mui/icons-material/HomeWork"
+import AnalyticsIcon from "@mui/icons-material/Analytics"
+import MapIcon from "@mui/icons-material/Map"
+import ManageSearchIcon from "@mui/icons-material/ManageSearch"
+import ShowChartIcon from "@mui/icons-material/ShowChart"
+import TimelineIcon from "@mui/icons-material/Timeline"
+import LocationOnIcon from "@mui/icons-material/LocationOn"
+import SmartToyIcon from "@mui/icons-material/SmartToy"
+import SettingsIcon from "@mui/icons-material/Settings"
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 
 const icons = {
-  Dashboard:   DashboardIcon,
-  Biens:       HomeWorkIcon,
-  Analytics:   AnalyticsIcon,
-  Map:         MapIcon,
-  Search:      ManageSearchIcon,
-  Chart:       ShowChartIcon,
-  Timeline:    TimelineIcon,
-  Location:    LocationOnIcon,
-  Model:       SmartToyIcon,
-  Settings:    SettingsIcon,
+  Dashboard: DashboardIcon,
+  Biens: HomeWorkIcon,
+  Analytics: AnalyticsIcon,
+  Map: MapIcon,
+  Search: ManageSearchIcon,
+  Chart: ShowChartIcon,
+  Timeline: TimelineIcon,
+  Location: LocationOnIcon,
+  Model: SmartToyIcon,
+  Settings: SettingsIcon,
 }
 
 const menuItems = [
   {
     section: "TABLEAU DE BORD",
     items: [
-      { label: "Dashboard",         icon: "Dashboard", path: "/" },
+      { label: "Dashboard", icon: "Dashboard", path: "/" },
+      { label: "Prédiction", icon: "Predict", path: "/predict" },
     ],
   },
   {
     section: "RECHERCHE",
     items: [
-      { label: "Recherche avancée", icon: "Search",   path: "/recherche", badge: "IA" },
+      { label: "Recherche avancée", icon: "Search", path: "/recherche", badge: "IA" },
       { label: "Explorer une zone", icon: "Location", path: "/zone" },
-      { label: "Biens immobiliers", icon: "Biens",    path: "/biens" },
+      { label: "Biens immobiliers", icon: "Biens", path: "/biens" },
     ],
   },
   {
     section: "ANALYSE",
     items: [
-      { label: "Prix au m²",        icon: "Chart",    path: "/prix-m2" },
-      { label: "Évolution des prix",icon: "Timeline", path: "/evolution" },
+      { label: "Prix au m²", icon: "Chart", path: "/prix-m2" },
+      { label: "Évolution des prix", icon: "Timeline", path: "/evolution" },
     ],
   },
 ]
 
 const Sidebar = ({ open, onClose, collapsed }) => {
-  const location       = useLocation()
+  const location = useLocation()
   const [expanded, setExpanded] = useState({})
   const { data: stats } = useApi('/stats')
 
   const toggleExpand = (label) => setExpanded(prev => ({ ...prev, [label]: !prev[label] }))
-  const isActive     = (path) => location.pathname === path
+  const isActive = (path) => location.pathname === path
 
   const renderBadge = (badge) => {
     if (!badge) return null
@@ -76,10 +77,9 @@ const Sidebar = ({ open, onClose, collapsed }) => {
         {/* ── Logo ── */}
         <div className="sb-logo">
           <div className="sb-logo-icon">
-            <svg viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="#00c896" opacity=".15"/>
-              <path d="M8 22l5-8 4 5 3-4 4 7" stroke="#00c896" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="8" cy="22" r="2" fill="#00c896"/>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
           </div>
           {!collapsed && (
@@ -97,10 +97,10 @@ const Sidebar = ({ open, onClose, collapsed }) => {
               {!collapsed && <p className="sb-section-title">{section.section}</p>}
 
               {section.items.map((item) => {
-                const IconComp   = icons[item.icon]
+                const IconComp = icons[item.icon]
                 const hasChildren = item.children?.length > 0
-                const isExpanded  = expanded[item.label]
-                const active      = isActive(item.path)
+                const isExpanded = expanded[item.label]
+                const active = isActive(item.path)
 
                 return (
                   <div key={item.label}>
@@ -117,7 +117,7 @@ const Sidebar = ({ open, onClose, collapsed }) => {
                           <>
                             <span className="sb-item-label">{item.label}</span>
                             <span className={`sb-item-chevron ${isExpanded ? 'sb-item-chevron--open' : ''}`}>
-                              <ExpandMoreIcon fontSize="small"/>
+                              <ExpandMoreIcon fontSize="small" />
                             </span>
                           </>
                         )}

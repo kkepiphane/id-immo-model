@@ -5,6 +5,7 @@ import ZoneExplorer    from './ZoneExplorer'
 import EvolutionPrix   from './EvolutionPrix'
 import BiensCatalogue  from './BiensCatalogue'
 import RechercheAvancee from './RechercheAvancee'
+import Prediction from './Prediction'
 
 export default function AppRouter() {
   return (
@@ -15,6 +16,7 @@ export default function AppRouter() {
       <Route path="/zone"      element={<ZoneExplorer />} />
       <Route path="/prix-m2"   element={<PrixM2 />} />
       <Route path="/evolution" element={<EvolutionPrix />} />
+      <Route path="/predict" element={<Prediction />} />
       <Route path="*"          element={<Navigate to="/" replace />} />
     </Routes>
   )
