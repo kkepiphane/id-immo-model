@@ -131,8 +131,8 @@ export default function Dashboard() {
     { label: 'Agoe', value: 250000 },
   ]
   const bySrc = sourcesData?.items ?? [
-    { label: 'coinafrique', value: 612 },
-    { label: 'omnisoft', value: 380 },
+    { label: 'coinafrique', value: 380 },
+    { label: 'omnisoft', value: (790) },
     { label: 'igoe', value: 148 },
     { label: 'intendance', value: 107 },
   ]

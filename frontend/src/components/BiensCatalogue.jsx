@@ -34,7 +34,7 @@ function BienCard({ bien, view }) {
       <h3 className="bien-card-title">{bien.title || '—'}</h3>
       <div className="bien-card-loc">
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="6" cy="5" r="2.5"/><path d="M6 1C3.8 1 2 2.8 2 5c0 3 4 7 4 7s4-4 4-7c0-2.2-1.8-4-4-4z"/>
+          <circle cx="6" cy="5" r="2.5" /><path d="M6 1C3.8 1 2 2.8 2 5c0 3 4 7 4 7s4-4 4-7c0-2.2-1.8-4-4-4z" />
         </svg>
         {bien.neighborhood || '—'}
       </div>
@@ -167,8 +167,8 @@ export default function BiensCatalogue() {
     setBedroomsRange([null, null]); setSearch(''); setPage(1)
   }
   const activeFilters = [propType !== 'Tous', offerType !== 'Tous', zone !== 'Toutes',
-    priceRange[0] || priceRange[1], surfaceRange[0] || surfaceRange[1],
-    bedroomsRange[0] || bedroomsRange[1]].filter(Boolean).length
+  priceRange[0] || priceRange[1], surfaceRange[0] || surfaceRange[1],
+  bedroomsRange[0] || bedroomsRange[1]].filter(Boolean).length
 
   return (
     <div className="biens-container">
@@ -182,7 +182,7 @@ export default function BiensCatalogue() {
         <div className="biens-controls">
           <div className="search-bar">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="6" cy="6" r="4"/><path d="M9.5 9.5l3 3"/>
+              <circle cx="6" cy="6" r="4" /><path d="M9.5 9.5l3 3" />
             </svg>
             <input className="search-input-sm" placeholder="Rechercher..."
               value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />

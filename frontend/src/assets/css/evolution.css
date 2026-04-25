@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
    evolution.css — Évolution des Prix
-   Palette : blanc cassé · bleu nuit · vert émeraude
+   Palette : héritée de app.css
    ═══════════════════════════════════════════ */
 
 .evo-container {
@@ -8,7 +8,7 @@
   max-width: 1200px;
   margin: 0 auto;
   font-family: 'Sora', 'DM Sans', system-ui, sans-serif;
-  color: var(--text-primary, #f0ece4);
+  color: var(--text-primary);
   animation: fadeUp 0.4s ease both;
 }
 
@@ -24,13 +24,13 @@
 .evo-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--text-primary, #f0ece4);
+  color: var(--text-primary);
   letter-spacing: -0.03em;
   margin: 0 0 0.2rem;
 }
 .evo-sub {
   font-size: 0.82rem;
-  color: var(--text-muted, rgba(240,236,228,0.45));
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -43,8 +43,8 @@
 }
 .period-tabs {
   display: flex;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 3px;
   gap: 2px;
@@ -53,7 +53,7 @@
   padding: 0.35rem 0.75rem;
   border: none;
   background: transparent;
-  color: rgba(240,236,228,0.5);
+  color: var(--text-secondary);
   font-size: 0.78rem;
   font-weight: 500;
   border-radius: 6px;
@@ -63,15 +63,15 @@
 }
 .period-tab.active,
 .period-tab:hover {
-  background: var(--accent, #00c896);
+  background: var(--accent);
   color: #0a1628;
 }
 .compare-btn {
   padding: 0.4rem 1rem;
   border-radius: 8px;
-  border: 1px solid rgba(0,200,150,0.3);
+  border: 1px solid var(--accent-border);
   background: transparent;
-  color: var(--accent, #00c896);
+  color: var(--accent);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -79,8 +79,8 @@
 }
 .compare-btn.active,
 .compare-btn:hover {
-  background: rgba(0,200,150,0.12);
-  border-color: var(--accent, #00c896);
+  background: var(--accent-dim);
+  border-color: var(--accent);
 }
 
 /* KPI strip */
@@ -91,8 +91,8 @@
   margin-bottom: 1.5rem;
 }
 .evo-kpi {
-  background: var(--bg-card, rgba(255,255,255,0.04));
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
   display: flex;
@@ -101,22 +101,22 @@
 }
 .evo-kpi span {
   font-size: 0.75rem;
-  color: var(--text-muted, rgba(240,236,228,0.45));
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 .evo-kpi strong {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-primary, #f0ece4);
+  color: var(--text-primary);
 }
-.evo-kpi strong.up { color: #00c896; }
-.evo-kpi strong.down { color: #f87070; }
+.evo-kpi strong.up { color: var(--accent); }
+.evo-kpi strong.down { color: var(--down); }
 
 /* Main chart card */
 .evo-chart-card {
-  background: var(--bg-card, rgba(255,255,255,0.04));
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 1.5rem 1.75rem 1.25rem;
   margin-bottom: 1.5rem;
@@ -132,7 +132,7 @@
 .chart-card-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text-primary, #f0ece4);
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 .type-tabs {
@@ -143,18 +143,18 @@
 .type-tab {
   padding: 0.28rem 0.65rem;
   border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
   background: transparent;
-  color: rgba(240,236,228,0.45);
+  color: var(--text-muted);
   font-size: 0.72rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 .type-tab.active,
 .type-tab:hover {
-  background: rgba(0,200,150,0.12);
-  border-color: rgba(0,200,150,0.4);
-  color: #00c896;
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: var(--accent);
 }
 .legend-row {
   display: flex;
@@ -166,7 +166,7 @@
   align-items: center;
   gap: 5px;
   font-size: 0.75rem;
-  color: rgba(240,236,228,0.6);
+  color: var(--text-secondary);
 }
 .legend-dot {
   width: 8px; height: 8px; border-radius: 50%;
@@ -190,7 +190,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(240,236,228,0.3);
+  color: var(--text-hint);
   font-size: 0.85rem;
 }
 
@@ -207,12 +207,12 @@
 .section-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary, #f0ece4);
+  color: var(--text-primary);
   margin: 0;
 }
 .section-hint {
   font-size: 0.73rem;
-  color: rgba(240,236,228,0.35);
+  color: var(--text-hint);
 }
 
 /* Heatmap */
@@ -227,29 +227,30 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  border: 1px solid rgba(0,200,150,0.15);
+  border: 1px solid var(--accent-border);
+  background: var(--surface);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .heatmap-cell:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,200,150,0.12);
+  box-shadow: var(--shadow-sm);
 }
 .hm-zone {
   font-size: 0.78rem;
   font-weight: 600;
-  color: rgba(240,236,228,0.8);
+  color: var(--text-secondary);
 }
 .hm-price {
   font-size: 0.92rem;
   font-weight: 700;
-  color: #f0ece4;
+  color: var(--text-primary);
 }
 .hm-trend {
   font-size: 0.72rem;
   font-weight: 600;
 }
-.hm-trend.up { color: #00c896; }
-.hm-trend.down { color: #f87070; }
+.hm-trend.up { color: var(--accent); }
+.hm-trend.down { color: var(--down); }
 
 /* Split cards */
 .evo-split {
@@ -258,15 +259,15 @@
   gap: 1rem;
 }
 .split-card {
-  background: var(--bg-card, rgba(255,255,255,0.04));
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
 }
 .split-title {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-primary, #f0ece4);
+  color: var(--text-primary);
   margin: 0 0 1rem;
 }
 .rank-row {
@@ -275,28 +276,28 @@
   align-items: center;
   gap: 0.5rem 0.75rem;
   padding: 0.45rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border);
 }
 .rank-row:last-child { border-bottom: none; }
 .rank-n {
   font-size: 0.7rem;
-  color: rgba(240,236,228,0.3);
+  color: var(--text-hint);
   font-weight: 700;
   text-align: center;
 }
 .rank-zone {
   font-size: 0.82rem;
-  color: rgba(240,236,228,0.75);
+  color: var(--text-secondary);
 }
 .rank-val {
   font-size: 0.78rem;
   font-weight: 700;
 }
-.rank-val.up { color: #00c896; }
-.rank-val.down { color: #f87070; }
+.rank-val.up { color: var(--accent); }
+.rank-val.down { color: var(--down); }
 .rank-price {
   font-size: 0.75rem;
-  color: rgba(240,236,228,0.45);
+  color: var(--text-muted);
 }
 
 @keyframes fadeUp {

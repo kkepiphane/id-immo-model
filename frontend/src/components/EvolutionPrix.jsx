@@ -1,443 +1,284 @@
-import React, { useState, useRef } from 'react'
-import '../assets/css/zone.css'
+import React, { useState, useMemo } from 'react'
+import { useApi } from '../hooks/useApi'
+import '../assets/css/evolution.css'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const fmt = n => n == null ? '—' : Math.round(n).toLocaleString('fr-FR') + ' FCFA'
 
-const SUGGESTIONS = [
-  'Hédzranawoé', 'Adidogome', 'Kégué', 'Agoe', 'Bè',
-  'Avedji', 'Nyekonakpoe', 'Zanguera', 'Baguida', 'Lomé Centre',
-  'Agbalépédo', 'Dékon', 'Sogbossito', 'Lanklouvi'
-]
+/* ── Sparkline SVG full-width ── */
+function LineChart({ series, height = 220, showGrid = true }) {
+  if (!series?.length || !series[0]?.points?.length) return <div className="chart-empty">Chargement...</div>
+  const allVals = series.flatMap(s => s.points.map(p => p.value))
+  const minV = Math.min(...allVals)
+  const maxV = Math.max(...allVals)
+  const range = maxV - minV || 1
+  const W = 600, H = height
+  const PAD = { top: 16, right: 24, bottom: 36, left: 56 }
+  const iW = W - PAD.left - PAD.right
+  const iH = H - PAD.top - PAD.bottom
 
-const PROPERTY_TYPES = ['Tous', 'Villa', 'Appartement', 'Appartement meublé', 'Maison', 'Terrain', 'Studio', 'Chambre salon', 'Chambre']
-const OFFER_TYPES   = ['Tous', 'Location', 'Vente']
+  const xScale = (i, total) => PAD.left + (i / (total - 1)) * iW
+  const yScale = v => PAD.top + iH - ((v - minV) / range) * iH
 
-/* ── mini sparkline ── */
-function Spark({ values, color = 'var(--accent)' }) {
-  if (!values?.length) return null
-  const w = 64, h = 24
-  const min = Math.min(...values), max = Math.max(...values)
-  const r = max - min || 1
-  const pts = values.map((v, i) =>
-    `${(i / (values.length - 1)) * w},${h - ((v - min) / r) * (h - 2) - 1}`
-  ).join(' ')
+  const colors = ['#00c896', '#1a3a5c', '#b0d0e8', '#e8c090']
+  const gridLines = 4
+
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} style={{ display: 'block' }}>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5"
-        strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={(values.length - 1) / (values.length - 1) * w}
-        cy={h - ((values[values.length - 1] - min) / r) * (h - 2) - 1}
-        r="2.5" fill={color} />
+    <svg viewBox={`0 0 ${W} ${H}`} className="linechart-svg" preserveAspectRatio="xMidYMid meet">
+      {showGrid && Array.from({ length: gridLines + 1 }, (_, i) => {
+        const y = PAD.top + (i / gridLines) * iH
+        const v = maxV - (i / gridLines) * range
+        return (
+          <g key={i}>
+            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
+              stroke="rgba(255,255,255,0.07)" strokeWidth="1" strokeDasharray="4 4" />
+            <text x={PAD.left - 8} y={y + 4} textAnchor="end"
+              fontSize="9" fill="rgba(255,255,255,0.35)">
+              {v > 999999 ? (v / 1000000).toFixed(1) + 'M' : v > 999 ? Math.round(v / 1000) + 'k' : Math.round(v)}
+            </text>
+          </g>
+        )
+      })}
+
+      {series.map((s, si) => {
+        const pts = s.points
+        const polyPts = pts.map((p, i) => `${xScale(i, pts.length)},${yScale(p.value)}`).join(' ')
+        const color = colors[si % colors.length]
+        const fillPts = [
+          `${xScale(0, pts.length)},${PAD.top + iH}`,
+          ...pts.map((p, i) => `${xScale(i, pts.length)},${yScale(p.value)}`),
+          `${xScale(pts.length - 1, pts.length)},${PAD.top + iH}`
+        ].join(' ')
+        return (
+          <g key={si}>
+            <polygon points={fillPts} fill={color} opacity="0.06" />
+            <polyline points={polyPts} fill="none" stroke={color}
+              strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            {pts.map((p, i) => (
+              <circle key={i} cx={xScale(i, pts.length)} cy={yScale(p.value)}
+                r="3.5" fill={color} stroke="var(--bg-card)" strokeWidth="1.5"
+                className="chart-dot">
+                <title>{p.label} — {fmt(p.value)}</title>
+              </circle>
+            ))}
+          </g>
+        )
+      })}
+
+      {/* X labels */}
+      {series[0]?.points.map((p, i) => (
+        <text key={i}
+          x={xScale(i, series[0].points.length)}
+          y={H - 8}
+          textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.35)">
+          {p.label}
+        </text>
+      ))}
     </svg>
   )
 }
 
-/* ── type bar row ── */
-function TypeRow({ label, count, pct, prix }) {
+/* ── Heatmap Calendar-style ── */
+function ZoneHeatmap({ rows }) {
+  if (!rows?.length) return null
+  const maxV = Math.max(...rows.map(r => r.prix))
   return (
-    <div className="type-row">
-      <span className="type-lbl">{label}</span>
-      <div className="type-track">
-        <div className="type-fill" style={{ width: pct + '%' }} />
-      </div>
-      <span className="type-count">{count}</span>
-      <span className="type-prix">{fmt(prix)}</span>
+    <div className="heatmap-grid">
+      {rows.map((r, i) => {
+        const intensity = r.prix / maxV
+        return (
+          <div key={i} className="heatmap-cell" style={{
+            '--intensity': intensity,
+            background: `rgba(0, 200, 150, ${0.08 + intensity * 0.55})`
+          }}>
+            <span className="hm-zone">{r.zone}</span>
+            <span className="hm-price">{fmt(r.prix)}</span>
+            <span className={`hm-trend ${r.trend >= 0 ? 'up' : 'down'}`}>
+              {r.trend >= 0 ? '▲' : '▼'} {Math.abs(r.trend)}%
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-/* ── Range input ── */
-function RangeFilter({ label, minVal, maxVal, onMin, onMax, placeholder = ['Min', 'Max'] }) {
-  return (
-    <div className="adv-field">
-      <label className="adv-label">{label}</label>
-      <div className="adv-range">
-        <input
-          type="number"
-          className="adv-input"
-          placeholder={placeholder[0]}
-          value={minVal ?? ''}
-          onChange={e => onMin(e.target.value ? Number(e.target.value) : null)}
-        />
-        <span className="adv-sep">–</span>
-        <input
-          type="number"
-          className="adv-input"
-          placeholder={placeholder[1]}
-          value={maxVal ?? ''}
-          onChange={e => onMax(e.target.value ? Number(e.target.value) : null)}
-        />
-      </div>
-    </div>
-  )
-}
+/* ── Période selector ── */
+const PERIODS = [
+  { label: '3 mois', value: '3m' },
+  { label: '6 mois', value: '6m' },
+  { label: '1 an', value: '1y' },
+  { label: '2 ans', value: '2y' },
+]
+const TYPES = ['Tous', 'Villa', 'Appartement', 'Maison', 'Terrain', 'Studio']
 
-export default function ZoneExplorer() {
-  const [query, setQuery]           = useState('')
-  const [showSug, setShowSug]       = useState(false)
-  const [showAdv, setShowAdv]       = useState(false)
-  const [loading, setLoading]       = useState(false)
-  const [result, setResult]         = useState(null)
-  const [error, setError]           = useState(null)
-  const inputRef = useRef(null)
-
-  /* ── Filtres avancés ── */
-  const [propType,    setPropType]    = useState('Tous')
-  const [offerType,   setOfferType]   = useState('Tous')
-  const [priceMin,    setPriceMin]    = useState(null)
-  const [priceMax,    setPriceMax]    = useState(null)
-  const [surfaceMin,  setSurfaceMin]  = useState(null)
-  const [surfaceMax,  setSurfaceMax]  = useState(null)
-  const [bedroomsMin, setBedroomsMin] = useState(null)
-  const [bedroomsMax, setBedroomsMax] = useState(null)
-
-  const activeFilters = [
-    propType !== 'Tous',
-    offerType !== 'Tous',
-    priceMin != null || priceMax != null,
-    surfaceMin != null || surfaceMax != null,
-    bedroomsMin != null || bedroomsMax != null,
-  ].filter(Boolean).length
-
-  const resetFilters = () => {
-    setPropType('Tous'); setOfferType('Tous')
-    setPriceMin(null); setPriceMax(null)
-    setSurfaceMin(null); setSurfaceMax(null)
-    setBedroomsMin(null); setBedroomsMax(null)
-  }
-
-  const filtered = SUGGESTIONS.filter(s =>
-    query.length > 0 && s.toLowerCase().includes(query.toLowerCase())
-  )
-
-  async function analyze(zone) {
-    const q = zone || query.trim()
-    if (!q) return
-    setQuery(q)
-    setShowSug(false)
-    setLoading(true)
-    setError(null)
-    setResult(null)
-
-    try {
-      const params = new URLSearchParams({ q })
-      if (propType  !== 'Tous') params.set('property_type', propType)
-      if (offerType !== 'Tous') params.set('offer_type', offerType)
-      if (priceMin   != null)   params.set('price_min', priceMin)
-      if (priceMax   != null)   params.set('price_max', priceMax)
-      if (surfaceMin != null)   params.set('surface_min', surfaceMin)
-      if (surfaceMax != null)   params.set('surface_max', surfaceMax)
-      if (bedroomsMin != null)  params.set('bedrooms_min', bedroomsMin)
-      if (bedroomsMax != null)  params.set('bedrooms_max', bedroomsMax)
-
-      const res = await fetch(`${API}/analytics/zone?${params.toString()}`)
-      if (!res.ok) throw new Error('Zone introuvable')
-      const data = await res.json()
-      setResult(data)
-    } catch {
-      /* fallback demo */
-      setResult({
-        zone: q,
-        kpis: {
-          indice: 82.5,
-          prix_moyen: 480000,
-          variation: 6.2,
-          total: 134,
-          location_pct: 68
-        },
-        spark: [380000, 400000, 390000, 420000, 445000, 480000],
-        types: [
-          { label: 'Villa',        count: 42, pct: 100, prix: 620000 },
-          { label: 'Appartement',  count: 35, pct: 83,  prix: 380000 },
-          { label: 'Maison',       count: 28, pct: 67,  prix: 310000 },
-          { label: 'Terrain',      count: 18, pct: 43,  prix: 22000000 },
-          { label: 'Studio',       count: 11, pct: 26,  prix: 130000 },
-        ],
-        recent: [
-          { title: 'Villa 5 ch. avec piscine',   price: 450000,  offer_type: 'Location' },
-          { title: 'Appartement meublé 2 ch.',   price: 600000,  offer_type: 'Location' },
-          { title: 'Terrain 600 m²',             price: 26000000,offer_type: 'Vente' },
-          { title: 'Chambre salon cuisine',      price: 60000,   offer_type: 'Location' },
-        ]
-      })
-    } finally {
-      setLoading(false)
+/* ── Fallback data generators ── */
+function genSeries(period, type) {
+  const months = { '3m': 3, '6m': 6, '1y': 12, '2y': 24 }[period]
+  const now = new Date()
+  const bases = { Villa: 580000, Appartement: 340000, Maison: 290000, Terrain: 8000000, Studio: 130000, Tous: 420000 }
+  const base = bases[type] || 420000
+  return Array.from({ length: months }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i))
+    const noise = (Math.random() - 0.45) * 0.04
+    const trend = i * 0.005
+    return {
+      label: d.toLocaleDateString('fr-FR', { month: 'short', year: months > 12 ? '2-digit' : undefined }),
+      value: Math.round(base * (1 + trend + noise))
     }
-  }
+  })
+}
 
-  function handleKey(e) {
-    if (e.key === 'Enter') analyze()
-    if (e.key === 'Escape') setShowSug(false)
-  }
+const ZONE_ROWS = [
+  { zone: 'Lomé Centre', prix: 500000, trend: 8.0 },
+  { zone: 'Hédzranawoé', prix: 480000, trend: 5.2 },
+  { zone: 'Kégué', prix: 420000, trend: 3.1 },
+  { zone: 'Nyekonakpoe', prix: 380000, trend: -1.2 },
+  { zone: 'Adidogome', prix: 350000, trend: 3.0 },
+  { zone: 'Bè', prix: 310000, trend: 1.5 },
+  { zone: 'Agoe', prix: 260000, trend: -2.0 },
+  { zone: 'Avedji', prix: 220000, trend: -0.8 },
+  { zone: 'Zanguera', prix: 195000, trend: 0.4 },
+  { zone: 'Baguida', prix: 175000, trend: -1.5 },
+  { zone: 'Sogbossito', prix: 310000, trend: 2.1 },
+  { zone: 'Lanklouvi', prix: 230000, trend: 1.8 },
+]
 
-  const indiceColor = result
-    ? result.kpis.indice >= 75 ? 'var(--accent)'
-      : result.kpis.indice >= 50 ? '#f8b444' : 'var(--down)'
-    : 'var(--text-primary)'
+export default function EvolutionPrix() {
+  const [period, setPeriod] = useState('6m')
+  const [type, setType] = useState('Tous')
+  const [compareMode, setCompareMode] = useState(false)
+
+  const { data: evoData } = useApi(`/analytics/evolution?period=${period}&type=${encodeURIComponent(type)}`)
+
+  const series = useMemo(() => {
+    if (evoData?.series) return evoData.series
+    if (compareMode) {
+      return ['Villa', 'Appartement', 'Maison'].map(t => ({
+        label: t,
+        points: genSeries(period, t)
+      }))
+    }
+    return [{ label: type, points: genSeries(period, type) }]
+  }, [evoData, period, type, compareMode])
+
+  const lastPoint = series[0]?.points?.at(-1)?.value
+  const firstPoint = series[0]?.points?.[0]?.value
+  const globalTrend = firstPoint && lastPoint ? ((lastPoint - firstPoint) / firstPoint * 100).toFixed(1) : null
 
   return (
-    <div className="zone-container">
+    <div className="evo-container">
 
-      {/* ── Hero search ── */}
-      <div className={`zone-hero ${result ? 'compact' : ''}`}>
-        {!result && (
-          <div className="zone-hero-text">
-            <h1 className="zone-hero-title">Explorer le marché</h1>
-            <p className="zone-hero-sub">Analyse complète d'une zone — prix, tendances, types de biens</p>
+      {/* Header */}
+      <div className="evo-header">
+        <div>
+          <h1 className="evo-title">Évolution des Prix</h1>
+          <p className="evo-sub">Tendances historiques du marché immobilier · Lomé, Togo</p>
+        </div>
+        <div className="evo-controls">
+          <div className="period-tabs">
+            {PERIODS.map(p => (
+              <button key={p.value}
+                className={`period-tab ${period === p.value ? 'active' : ''}`}
+                onClick={() => setPeriod(p.value)}>
+                {p.label}
+              </button>
+            ))}
           </div>
-        )}
+          <button
+            className={`compare-btn ${compareMode ? 'active' : ''}`}
+            onClick={() => setCompareMode(v => !v)}>
+            Comparer
+          </button>
+        </div>
+      </div>
 
-        {/* Search box */}
-        <div className="search-wrap">
-          <div className="search-box">
-            <svg className="search-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5l3 3"/>
-            </svg>
-            <input
-              ref={inputRef}
-              className="search-input"
-              placeholder="Entrer une zone  —  ex: Hédzranawoé, Adidogome..."
-              value={query}
-              onChange={e => { setQuery(e.target.value); setShowSug(true) }}
-              onFocus={() => setShowSug(true)}
-              onBlur={() => setTimeout(() => setShowSug(false), 150)}
-              onKeyDown={handleKey}
-            />
+      {/* KPI strip */}
+      <div className="evo-kpis">
+        <div className="evo-kpi">
+          <span>Prix actuel</span>
+          <strong>{fmt(lastPoint)}</strong>
+        </div>
+        <div className="evo-kpi">
+          <span>Variation période</span>
+          <strong className={Number(globalTrend) >= 0 ? 'up' : 'down'}>
+            {Number(globalTrend) >= 0 ? '+' : ''}{globalTrend}%
+          </strong>
+        </div>
+        <div className="evo-kpi">
+          <span>Tendance dominante</span>
+          <strong className="up">Hausse modérée</strong>
+        </div>
+        <div className="evo-kpi">
+          <span>Marché</span>
+          <strong>Actif</strong>
+        </div>
+      </div>
 
-            {/* Bouton filtres avancés */}
-            <button
-              className={`adv-toggle ${showAdv ? 'active' : ''}`}
-              onClick={() => setShowAdv(v => !v)}
-              title="Filtres avancés"
-            >
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M2 4h12M4 8h8M6 12h4"/>
-              </svg>
-              {activeFilters > 0 && <span className="adv-count">{activeFilters}</span>}
-            </button>
-
-            <button className="search-btn" onClick={() => analyze()} disabled={loading}>
-              {loading ? <span className="btn-spinner" /> : 'Analyser'}
-            </button>
-          </div>
-
-          {/* Suggestions dropdown */}
-          {showSug && filtered.length > 0 && (
-            <div className="suggestions">
-              {filtered.map(s => (
-                <div key={s} className="sug-item" onMouseDown={() => analyze(s)}>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
-                    <circle cx="5.5" cy="5.5" r="3.5"/><path d="M8 8l2 2"/>
-                  </svg>
-                  {s}
-                </div>
+      {/* Main chart */}
+      <div className="evo-chart-card">
+        <div className="chart-card-header">
+          <span className="chart-card-title">
+            {compareMode ? 'Comparaison par type de bien' : `Prix médian — ${type}`}
+          </span>
+          {!compareMode && (
+            <div className="type-tabs">
+              {TYPES.map(t => (
+                <button key={t}
+                  className={`type-tab ${type === t ? 'active' : ''}`}
+                  onClick={() => setType(t)}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          )}
+          {compareMode && (
+            <div className="legend-row">
+              {series.map((s, i) => (
+                <span key={i} className="legend-item">
+                  <span className="legend-dot" style={{ background: ['#00c896', '#1a3a5c', '#b0d0e8'][i] }} />
+                  {s.label}
+                </span>
               ))}
             </div>
           )}
         </div>
-
-        {/* ── Panneau filtres avancés ── */}
-        {showAdv && (
-          <div className="adv-panel">
-            <div className="adv-panel-head">
-              <span className="adv-panel-title">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-                  <path d="M2 4h12M4 8h8M6 12h4"/>
-                </svg>
-                Filtres avancés
-              </span>
-              {activeFilters > 0 && (
-                <button className="adv-reset" onClick={resetFilters}>
-                  ✕ Réinitialiser ({activeFilters})
-                </button>
-              )}
-            </div>
-
-            <div className="adv-grid">
-              {/* Type de bien */}
-              <div className="adv-field adv-field--wide">
-                <label className="adv-label">Type de bien</label>
-                <div className="adv-chips">
-                  {PROPERTY_TYPES.map(t => (
-                    <button
-                      key={t}
-                      className={`adv-chip ${propType === t ? 'active' : ''}`}
-                      onClick={() => setPropType(t)}
-                    >{t}</button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Offre */}
-              <div className="adv-field">
-                <label className="adv-label">Type d'offre</label>
-                <div className="adv-chips">
-                  {OFFER_TYPES.map(t => (
-                    <button
-                      key={t}
-                      className={`adv-chip ${offerType === t ? 'active' : ''}`}
-                      onClick={() => setOfferType(t)}
-                    >{t}</button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Prix */}
-              <RangeFilter
-                label="Prix (FCFA)"
-                minVal={priceMin} maxVal={priceMax}
-                onMin={setPriceMin} onMax={setPriceMax}
-                placeholder={['Prix min', 'Prix max']}
-              />
-
-              {/* Surface */}
-              <RangeFilter
-                label="Surface (m²)"
-                minVal={surfaceMin} maxVal={surfaceMax}
-                onMin={setSurfaceMin} onMax={setSurfaceMax}
-                placeholder={['Min m²', 'Max m²']}
-              />
-
-              {/* Chambres */}
-              <RangeFilter
-                label="Chambres"
-                minVal={bedroomsMin} maxVal={bedroomsMax}
-                onMin={setBedroomsMin} onMax={setBedroomsMax}
-                placeholder={['Min', 'Max']}
-              />
-            </div>
-
-            {/* Tags actifs */}
-            {activeFilters > 0 && (
-              <div className="adv-tags">
-                {propType !== 'Tous' && (
-                  <span className="adv-tag">
-                    {propType}
-                    <button onClick={() => setPropType('Tous')}>×</button>
-                  </span>
-                )}
-                {offerType !== 'Tous' && (
-                  <span className="adv-tag">
-                    {offerType}
-                    <button onClick={() => setOfferType('Tous')}>×</button>
-                  </span>
-                )}
-                {(priceMin != null || priceMax != null) && (
-                  <span className="adv-tag">
-                    Prix : {priceMin ?? '0'} – {priceMax ?? '∞'} FCFA
-                    <button onClick={() => { setPriceMin(null); setPriceMax(null) }}>×</button>
-                  </span>
-                )}
-                {(surfaceMin != null || surfaceMax != null) && (
-                  <span className="adv-tag">
-                    Surface : {surfaceMin ?? '0'} – {surfaceMax ?? '∞'} m²
-                    <button onClick={() => { setSurfaceMin(null); setSurfaceMax(null) }}>×</button>
-                  </span>
-                )}
-                {(bedroomsMin != null || bedroomsMax != null) && (
-                  <span className="adv-tag">
-                    Chambres : {bedroomsMin ?? '0'} – {bedroomsMax ?? '∞'}
-                    <button onClick={() => { setBedroomsMin(null); setBedroomsMax(null) }}>×</button>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Quick chips */}
-        {!result && !loading && (
-          <div className="zone-chips">
-            {['Hédzranawoé', 'Adidogome', 'Kégué', 'Agoe', 'Avedji'].map(z => (
-              <button key={z} className="chip" onClick={() => analyze(z)}>{z}</button>
-            ))}
-          </div>
-        )}
+        <LineChart series={series} height={240} />
       </div>
 
-      {/* ── Loading ── */}
-      {loading && (
-        <div className="zone-loading">
-          <div className="loader-bar" />
-          <p>Analyse de {query}…</p>
+      {/* Heatmap zones */}
+      <div className="evo-section">
+        <div className="section-head">
+          <h3 className="section-title">Carte de chaleur — Prix par zone</h3>
+          <span className="section-hint">Intensité proportionnelle au prix médian</span>
         </div>
-      )}
+        <ZoneHeatmap rows={ZONE_ROWS} />
+      </div>
 
-      {/* ── Results ── */}
-      {result && !loading && (
-        <div className="zone-results">
-
-          {/* zone title + indice */}
-          <div className="zone-result-header">
-            <div>
-              <h2 className="zone-name">{result.zone}</h2>
-              <p className="zone-name-sub">{result.kpis.total} annonces analysées
-                {activeFilters > 0 && <span className="zone-filter-note"> · {activeFilters} filtre{activeFilters > 1 ? 's' : ''} actif{activeFilters > 1 ? 's' : ''}</span>}
-              </p>
+      {/* Two col: top performers + worst */}
+      <div className="evo-split">
+        <div className="split-card">
+          <h4 className="split-title">📈 Zones en hausse</h4>
+          {[...ZONE_ROWS].filter(r => r.trend > 0).sort((a, b) => b.trend - a.trend).slice(0, 5).map((r, i) => (
+            <div key={i} className="rank-row">
+              <span className="rank-n">{i + 1}</span>
+              <span className="rank-zone">{r.zone}</span>
+              <span className="rank-val up">+{r.trend}%</span>
+              <span className="rank-price">{fmt(r.prix)}</span>
             </div>
-            <div className="indice-block">
-              <span className="indice-label">Indice immobilier</span>
-              <span className="indice-val" style={{ color: indiceColor }}>
-                {result.kpis.indice}
-              </span>
-              <div className="indice-track">
-                <div className="indice-fill" style={{ width: result.kpis.indice + '%', background: indiceColor }} />
-              </div>
-            </div>
-          </div>
-
-          {/* KPI row */}
-          <div className="zone-kpis">
-            <div className="zkpi">
-              <span>Prix moyen</span>
-              <strong>{fmt(result.kpis.prix_moyen)}</strong>
-              <div className="zkpi-spark"><Spark values={result.spark} color="var(--accent)" /></div>
-            </div>
-            <div className="zkpi">
-              <span>Tendance</span>
-              <strong className={result.kpis.variation >= 0 ? 'up' : 'down'}>
-                {result.kpis.variation >= 0 ? '+' : ''}{result.kpis.variation}%
-              </strong>
-              <small>sur 6 mois</small>
-            </div>
-            <div className="zkpi">
-              <span>Location</span>
-              <strong>{result.kpis.location_pct}%</strong>
-              <small>des annonces</small>
-            </div>
-            <div className="zkpi">
-              <span>Vente</span>
-              <strong>{100 - result.kpis.location_pct}%</strong>
-              <small>des annonces</small>
-            </div>
-          </div>
-
-          {/* Types */}
-          <div className="zone-section">
-            <h4 className="section-title">Répartition par type de bien</h4>
-            {result.types.map((t, i) => <TypeRow key={i} {...t} />)}
-          </div>
-
-          {/* Recent */}
-          <div className="zone-section">
-            <h4 className="section-title">Annonces récentes dans cette zone</h4>
-            <div className="recent-grid">
-              {result.recent.map((r, i) => (
-                <div className="recent-card" key={i}>
-                  <div className="recent-title">{r.title}</div>
-                  <div className="recent-footer">
-                    <span className={`pill ${r.offer_type?.toLowerCase().includes('vent') ? 'vente' : 'location'}`}>
-                      {r.offer_type}
-                    </span>
-                    <span className="recent-price">{fmt(r.price)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+        <div className="split-card">
+          <h4 className="split-title">📉 Zones en baisse</h4>
+          {[...ZONE_ROWS].filter(r => r.trend < 0).sort((a, b) => a.trend - b.trend).slice(0, 5).map((r, i) => (
+            <div key={i} className="rank-row">
+              <span className="rank-n">{i + 1}</span>
+              <span className="rank-zone">{r.zone}</span>
+              <span className="rank-val down">{r.trend}%</span>
+              <span className="rank-price">{fmt(r.prix)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
